@@ -1,4 +1,4 @@
-# JDecoder
+# JLFDecoder
 
 **Multi-path Decoding Engine for Web Application Security Testing**
 
@@ -8,7 +8,7 @@ Author: jakeloai
 
 ## Overview
 
-JDecoder automatically discovers multi-layer encoding chains used in web applications. Given an encoded string, it exhaustively tries all possible decoding combinations and verifies each result by re-encoding back to the original input.
+JLFDecoder automatically discovers multi-layer encoding chains used in web applications. Given an encoded string, it exhaustively tries all possible decoding combinations and verifies each result by re-encoding back to the original input.
 
 Designed for bug bounty hunters and web application penetration testers who encounter obfuscated tokens, cookies, API parameters, and serialized data.
 
@@ -16,12 +16,12 @@ Designed for bug bounty hunters and web application penetration testers who enco
 
 ## Features
 
-- **Auto Explore**: Automatically tries all encoding combinations up to configurable depth
-- **Encode-Back Verification**: Every discovered chain is verified by re-encoding the result
-- **Manual Chain**: Specify exact decode chain when you know the pattern
-- **Batch Processing**: Decode multiple strings from a file
-- **Target Pattern Stop**: Stop exploration when result matches your regex
-- **Web-Focused Methods**: Only encodings relevant to modern web applications
+* **Auto Explore**: Automatically tries all encoding combinations up to configurable depth
+* **Encode-Back Verification**: Every discovered chain is verified by re-encoding the result
+* **Manual Chain**: Specify exact decode chain when you know the pattern
+* **Batch Processing**: Decode multiple strings from a file
+* **Target Pattern Stop**: Stop exploration when result matches your regex
+* **Web-Focused Methods**: Only encodings relevant to modern web applications
 
 ---
 
@@ -29,6 +29,7 @@ Designed for bug bounty hunters and web application penetration testers who enco
 
 ```bash
 pip install -r requirements.txt
+
 ```
 
 ---
@@ -38,38 +39,44 @@ pip install -r requirements.txt
 ### Auto Explore (Default)
 
 ```bash
-python jdecoder.py "ZmxhZ3tleGFtcGxlfQ=="
+python jlfdecoder.py "ZmxhZ3tleGFtcGxlfQ=="
+
 ```
 
 ### Manual Decode Chain
 
 ```bash
-python jdecoder.py --chain "url,base64" "ZmxhZ3s..."
-python jdecoder.py --chain "base64x3" "Vm0wd2Qy..."
+python jlfdecoder.py --chain "url,base64" "ZmxhZ3s..."
+python jlfdecoder.py --chain "base64x3" "Vm0wd2Qy..."
+
 ```
 
 ### Batch Processing
 
 ```bash
-python jdecoder.py --file codes.txt
+python jlfdecoder.py --file codes.txt
+
 ```
 
 ### Stop on Pattern Match
 
 ```bash
-python jdecoder.py --target "flag\{.*\}" "ZmxhZ3s..."
+python jlfdecoder.py --target "flag\{.*\}" "ZmxhZ3s..."
+
 ```
 
 ### Show All Results (Including Rejected)
 
 ```bash
-python jdecoder.py --show-all "ZmxhZ3s..."
+python jlfdecoder.py --show-all "ZmxhZ3s..."
+
 ```
 
 ### Disable Colors
 
 ```bash
-python jdecoder.py --no-color "ZmxhZ3s..."
+python jlfdecoder.py --no-color "ZmxhZ3s..."
+
 ```
 
 ---
@@ -77,7 +84,7 @@ python jdecoder.py --no-color "ZmxhZ3s..."
 ## Available Methods
 
 | Method | Aliases | Description |
-|--------|---------|-------------|
+| --- | --- | --- |
 | `base64` | `b64` | Standard Base64 |
 | `base64url` | `b64u` | URL-safe Base64 (RFC 4648) |
 | `hex` | - | Hexadecimal encoding |
@@ -97,7 +104,7 @@ python jdecoder.py --no-color "ZmxhZ3s..."
 Output is color-coded by severity:
 
 | Color | Level | Meaning |
-|-------|-------|---------|
+| --- | --- | --- |
 | **RED** | CRITICAL | Credentials, secrets, flags, API keys |
 | **YELLOW** | HIGH | Structured data with sensitive fields (JWT with weak alg, JSON with role) |
 | **LIGHTCYAN** | - | Readable text with security keywords |
@@ -112,7 +119,7 @@ Output is color-coded by severity:
 ### JWT Discovery
 
 ```bash
-$ python jdecoder.py "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+$ python jlfdecoder.py "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 
 [YELLOW] Chain: jwt
 Result: {
@@ -129,17 +136,19 @@ Result: {
 }
 Verify: jwt_encode = original OK
 Confidence: ████████░░ 85.0%
+
 ```
 
 ### Multi-Layer Chain
 
 ```bash
-$ python jdecoder.py --chain "url,base64" "ZmxhZ3s..."
+$ python jlfdecoder.py --chain "url,base64" "ZmxhZ3s..."
 
 [HIGH] Chain: url_decode -> base64
 Result: {"role":"admin","secret":"sk_live_abc123"}
 Verify: base64_encode -> url_encode = original OK
 Confidence: ████████░░ 90.0%
+
 ```
 
 ---
@@ -147,7 +156,7 @@ Confidence: ████████░░ 90.0%
 ## Options
 
 | Option | Description |
-|--------|-------------|
+| --- | --- |
 | `--chain, -c` | Manual decode chain (e.g., `base64,url`) |
 | `--file, -f` | File with encoded strings (one per line) |
 | `--target, -t` | Regex pattern to stop exploration |
