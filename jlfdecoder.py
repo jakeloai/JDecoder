@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-JDECODER - Multi-path Decoding Engine for Web Application Security Testing
+JLFDecoder - Multi-path Decoding Engine for Web Application Security Testing
 Author: jakeloai
 
 A focused decoding tool for bug bounty hunters and web application security testers.
