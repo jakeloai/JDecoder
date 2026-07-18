@@ -1,27 +1,16 @@
 # JLFDecoder
 
-**Multi-path Decoding Engine for Web Application Security Testing**
+> Designed by **jakelo.ai** · Coded with AI assistance
 
-Author: jakeloai
-
----
-
-## Overview
-
-JLFDecoder automatically discovers multi-layer encoding chains used in web applications. Given an encoded string, it exhaustively tries all possible decoding combinations and verifies each result by re-encoding back to the original input.
-
-Designed for bug bounty hunters and web application penetration testers who encounter obfuscated tokens, cookies, API parameters, and serialized data.
+You give it an encoded string. It tries every possible combination of decoding methods, then checks if re-encoding the result gives you back the original string. The ones that pass get shown to you.
 
 ---
 
-## Features
+## What it does
 
-* **Auto Explore**: Automatically tries all encoding combinations up to configurable depth
-* **Encode-Back Verification**: Every discovered chain is verified by re-encoding the result
-* **Manual Chain**: Specify exact decode chain when you know the pattern
-* **Batch Processing**: Decode multiple strings from a file
-* **Target Pattern Stop**: Stop exploration when result matches your regex
-* **Web-Focused Methods**: Only encodings relevant to modern web applications
+You have a token, cookie, or API parameter that looks encoded. You don't know which encoding was used, or if multiple layers were stacked. JLFDecoder tries every possible chain of decoders (up to a depth you set) and verifies each result by re-encoding it back to the original input.
+
+If the round-trip works, the chain is probably correct.
 
 ---
 
@@ -29,117 +18,103 @@ Designed for bug bounty hunters and web application penetration testers who enco
 
 ```bash
 pip install -r requirements.txt
-
 ```
 
 ---
 
-## Usage
+## How to use
 
-### Auto Explore (Default)
+**Auto-explore all possible decoding chains:**
 
 ```bash
 python jlfdecoder.py "ZmxhZ3tleGFtcGxlfQ=="
-
 ```
 
-### Manual Decode Chain
+**Specify a known chain manually:**
 
 ```bash
 python jlfdecoder.py --chain "url,base64" "ZmxhZ3s..."
 python jlfdecoder.py --chain "base64x3" "Vm0wd2Qy..."
-
 ```
 
-### Batch Processing
+**Process multiple strings from a file:**
 
 ```bash
 python jlfdecoder.py --file codes.txt
-
 ```
 
-### Stop on Pattern Match
+**Stop when result matches a pattern:**
 
 ```bash
 python jlfdecoder.py --target "flag\{.*\}" "ZmxhZ3s..."
-
 ```
 
-### Show All Results (Including Rejected)
+**Show all results including failed verifications:**
 
 ```bash
 python jlfdecoder.py --show-all "ZmxhZ3s..."
-
 ```
 
-### Disable Colors
+**Disable colored output:**
 
 ```bash
 python jlfdecoder.py --no-color "ZmxhZ3s..."
-
 ```
 
 ---
 
-## Available Methods
+## Available methods
 
-| Method | Aliases | Description |
-| --- | --- | --- |
-| `base64` | `b64` | Standard Base64 |
+| Method | Aliases | What it does |
+|---|---|---|
+| `base64` | `b64` | Standard Base64 decode |
 | `base64url` | `b64u` | URL-safe Base64 (RFC 4648) |
-| `hex` | - | Hexadecimal encoding |
-| `url_decode` | `url`, `uri` | Percent/URL encoding |
-| `html` | - | HTML entities |
-| `jwt` | - | JSON Web Token decode |
-| `unicode` | `utf8` | Unicode escapes (`\uXXXX`, `\xXX`) |
-| `gzip` | - | Gzip decompression |
-| `zlib` | - | Zlib (deflate with header) |
+| `hex` | — | Hex string to bytes |
+| `url_decode` | `url`, `uri` | Percent-decoding |
+| `html` | — | HTML entity decoding |
+| `jwt` | — | JWT payload extraction |
+| `unicode` | `utf8` | `\uXXXX` and `\xXX` escape decoding |
+| `gzip` | — | Gzip decompression |
+| `zlib` | — | Zlib decompression |
 | `deflate_raw` | `deflate` | Raw deflate (no header) |
 | `brotli` | `br` | Brotli decompression |
 
 ---
 
-## Classification Levels
+## How it decides what to show
 
-Output is color-coded by severity:
+Each result is checked by re-encoding the decoded output back through the same chain. If it matches the original input, it passes. If not, it gets rejected (hidden by default).
 
-| Color | Level | Meaning |
-| --- | --- | --- |
-| **RED** | CRITICAL | Credentials, secrets, flags, API keys |
-| **YELLOW** | HIGH | Structured data with sensitive fields (JWT with weak alg, JSON with role) |
-| **LIGHTCYAN** | - | Readable text with security keywords |
-| **GREEN** | COMMON | URLs, emails, UUIDs, API endpoints |
-| **WHITE** | PLAINTEXT | Other readable text |
-| **GREY** | REJECTED | Encode-back verification failed (hidden by default) |
+Results are also color-coded by what they look like:
+
+| Color | What it means |
+|---|---|
+| **Red** | Looks like credentials, secrets, API keys, or flags |
+| **Yellow** | Structured data with sensitive fields (JWT with weak algorithm, JSON with role fields) |
+| **Light cyan** | Readable text containing security-related keywords |
+| **Green** | URLs, emails, UUIDs, API endpoints |
+| **White** | Other readable text |
+| **Grey** | Failed verification (hidden unless `--show-all`) |
 
 ---
 
 ## Examples
 
-### JWT Discovery
+**JWT discovery:**
 
 ```bash
-$ python jlfdecoder.py "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+$ python jlfdecoder.py "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 [YELLOW] Chain: jwt
 Result: {
-  "header": {
-    "alg": "HS256",
-    "typ": "JWT"
-  },
-  "payload": {
-    "sub": "1234567890",
-    "name": "John Doe",
-    "iat": 1516239022
-  },
-  "signature": "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+  "header": {"alg": "HS256", "typ": "JWT"},
+  "payload": {"sub": "1234567890", "name": "John Doe", "iat": 1516239022}
 }
 Verify: jwt_encode = original OK
-Confidence: ████████░░ 85.0%
-
+Confidence: 85.0%
 ```
 
-### Multi-Layer Chain
+**Multi-layer chain:**
 
 ```bash
 $ python jlfdecoder.py --chain "url,base64" "ZmxhZ3s..."
@@ -147,8 +122,7 @@ $ python jlfdecoder.py --chain "url,base64" "ZmxhZ3s..."
 [HIGH] Chain: url_decode -> base64
 Result: {"role":"admin","secret":"sk_live_abc123"}
 Verify: base64_encode -> url_encode = original OK
-Confidence: ████████░░ 90.0%
-
+Confidence: 90.0%
 ```
 
 ---
@@ -156,10 +130,10 @@ Confidence: ████████░░ 90.0%
 ## Options
 
 | Option | Description |
-| --- | --- |
+|---|---|
 | `--chain, -c` | Manual decode chain (e.g., `base64,url`) |
 | `--file, -f` | File with encoded strings (one per line) |
-| `--target, -t` | Regex pattern to stop exploration |
+| `--target, -t` | Regex pattern to stop exploration when matched |
 | `--max-depth` | Maximum decode depth (default: 8) |
 | `--max-paths` | Maximum paths to explore (default: 200) |
 | `--list-methods` | Show available decoding methods |
@@ -171,4 +145,4 @@ Confidence: ████████░░ 90.0%
 
 ## License
 
-MIT License - Use at your own risk for authorized security testing only.
+MIT © jakelo.ai
